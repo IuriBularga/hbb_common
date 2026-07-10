@@ -67,20 +67,39 @@ lazy_static::lazy_static! {
     static ref STATUS: RwLock<Status> = RwLock::new(Status::load());
     static ref TRUSTED_DEVICES: RwLock<(Vec<TrustedDevice>, bool)> = Default::default();
     static ref ONLINE: Mutex<HashMap<String, i64>> = Default::default();
-    pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new("".to_owned());
+    // TradingMD: seeded with the built-in server so it takes precedence over the
+    // `rendezvous_server` cached in RustDesk2.toml; combined with the empty
+    // `custom-rendezvous-server` overwrite below, the built-in server always wins.
+    pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new(RENDEZVOUS_SERVERS[0].to_owned());
     pub static ref EXE_RENDEZVOUS_SERVER: RwLock<String> = Default::default();
-    pub static ref APP_NAME: RwLock<String> = RwLock::new("RustDesk".to_owned());
+    pub static ref APP_NAME: RwLock<String> = RwLock::new("TradingMD Remote".to_owned());
     static ref KEY_PAIR: Mutex<Option<KeyPair>> = Default::default();
     static ref USER_DEFAULT_CONFIG: RwLock<(UserDefaultConfig, Instant)> = RwLock::new((UserDefaultConfig::load(), Instant::now()));
     pub static ref NEW_STORED_PEER_CONFIG: Mutex<HashSet<String>> = Default::default();
     pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    // TradingMD: hard-pin the server configuration. Empty overwrite values make
+    // `get_option` ignore any user-set/imported server, relay, api or key, so the
+    // built-in RENDEZVOUS_SERVERS / RS_PUB_KEY always win.
+    pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = RwLock::new(HashMap::from([
+        (keys::OPTION_CUSTOM_RENDEZVOUS_SERVER.to_owned(), String::new()),
+        (keys::OPTION_RELAY_SERVER.to_owned(), String::new()),
+        (keys::OPTION_API_SERVER.to_owned(), String::new()),
+        (keys::OPTION_KEY.to_owned(), String::new()),
+    ]));
     pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref DEFAULT_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    // TradingMD: this build works as a host only (shows its ID/password and
+    // accepts incoming connections); all outgoing functionality is disabled.
+    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = RwLock::new(HashMap::from([
+        ("conn-type".to_owned(), "incoming".to_owned()),
+    ]));
+    // TradingMD: hide the ID/Relay server settings UI so users cannot try to
+    // change the (hard-pinned) server.
+    pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = RwLock::new(HashMap::from([
+        (keys::OPTION_HIDE_SERVER_SETTINGS.to_owned(), "Y".to_owned()),
+    ]));
 }
 
 #[cfg(target_os = "android")]
@@ -117,8 +136,21 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];
-pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";
+// TradingMD: the rendezvous/relay server and its public key are baked in at
+// build time from the RENDEZVOUS_SERVER / RS_PUB_KEY environment variables
+// (see BUILD_TRADINGMD.md). The production values are NOT stored in the
+// repository — they must be provided via env at build time (locally through
+// the git-ignored env file, in CI through repository secrets). When the
+// variables are unset the upstream RustDesk public defaults are used, so an
+// unconfigured build still compiles and runs (against the public server).
+pub const RENDEZVOUS_SERVERS: &[&str] = &[match option_env!("RENDEZVOUS_SERVER") {
+    Some(server) => server,
+    None => "rs-ny.rustdesk.com",
+}];
+pub const RS_PUB_KEY: &str = match option_env!("RS_PUB_KEY") {
+    Some(key) => key,
+    None => "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=",
+};
 
 pub const RENDEZVOUS_PORT: i32 = 21116;
 pub const RELAY_PORT: i32 = 21117;

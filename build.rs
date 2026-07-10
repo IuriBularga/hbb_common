@@ -1,4 +1,9 @@
 fn main() {
+    // TradingMD: RENDEZVOUS_SERVER / RS_PUB_KEY are baked into config.rs via
+    // option_env!, so a change in either must trigger a rebuild.
+    println!("cargo:rerun-if-env-changed=RENDEZVOUS_SERVER");
+    println!("cargo:rerun-if-env-changed=RS_PUB_KEY");
+
     let out_dir = format!("{}/protos", std::env::var("OUT_DIR").unwrap());
 
     std::fs::create_dir_all(&out_dir).unwrap();
