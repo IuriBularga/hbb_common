@@ -98,6 +98,9 @@ lazy_static::lazy_static! {
     // TradingMD: hide the ID/Relay server settings UI so users cannot try to
     // change the (hard-pinned) server.
     pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = RwLock::new(HashMap::from([
+        // Hide the whole Network settings tab (proxy / websocket / ID+relay
+        // server) so users cannot touch any server-related configuration.
+        (keys::OPTION_HIDE_NETWORK_SETTINGS.to_owned(), "Y".to_owned()),
         (keys::OPTION_HIDE_SERVER_SETTINGS.to_owned(), "Y".to_owned()),
     ]));
 }
