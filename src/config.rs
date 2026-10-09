@@ -88,6 +88,12 @@ lazy_static::lazy_static! {
         ("key".to_owned(), String::new()),
         // The updater downloads and runs the stock RustDesk installer.
         ("allow-auto-update".to_owned(), "N".to_owned()),
+        // Support staff only need the screen: no TCP tunnel into the customer's
+        // network and no terminal. "Full Access" would switch every permission
+        // on regardless, so the access mode is held at custom ("").
+        ("enable-tunnel".to_owned(), "N".to_owned()),
+        ("enable-terminal".to_owned(), "N".to_owned()),
+        ("access-mode".to_owned(), String::new()),
     ]));
     pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
