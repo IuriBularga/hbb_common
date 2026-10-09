@@ -3,6 +3,11 @@ fn main() {
     // option_env!, so a change in either must trigger a rebuild.
     println!("cargo:rerun-if-env-changed=RENDEZVOUS_SERVER");
     println!("cargo:rerun-if-env-changed=RS_PUB_KEY");
+    for var in ["RENDEZVOUS_SERVER", "RS_PUB_KEY"] {
+        if std::env::var(var).map_or(true, |v| v.is_empty()) {
+            println!("cargo:warning={var} is not set, building against the public RustDesk server");
+        }
+    }
 
     let out_dir = format!("{}/protos", std::env::var("OUT_DIR").unwrap());
 

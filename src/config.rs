@@ -86,6 +86,8 @@ lazy_static::lazy_static! {
         (keys::OPTION_RELAY_SERVER.to_owned(), String::new()),
         ("api-server".to_owned(), String::new()),
         ("key".to_owned(), String::new()),
+        // The updater downloads and runs the stock RustDesk installer.
+        ("allow-auto-update".to_owned(), "N".to_owned()),
     ]));
     pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
@@ -103,6 +105,13 @@ lazy_static::lazy_static! {
         // server) so users cannot touch any server-related configuration.
         ("hide-network-settings".to_owned(), "Y".to_owned()),
         ("hide-server-settings".to_owned(), "Y".to_owned()),
+        // The legacy Sciter UI does not know hide-network-settings.
+        ("hide-proxy-settings".to_owned(), "Y".to_owned()),
+        ("hide-websocket-settings".to_owned(), "Y".to_owned()),
+        // No API server is used (open-source hbbs has none). Without this the
+        // client polls http://<server>:21114 in plain text and applies the
+        // options a reply carries.
+        (keys::OPTION_REGISTER_DEVICE.to_owned(), "N".to_owned()),
     ]));
 }
 
@@ -144,13 +153,15 @@ const CHARS: &[char] = &[
 // the git-ignored env file, in CI through repository secrets). When the
 // variables are unset the upstream RustDesk public defaults are used, so an
 // unconfigured build still compiles and runs (against the public server).
+// An empty value counts as unset: CI exports a missing secret as "", which
+// would otherwise leave the client with no pinned server at all.
 pub const RENDEZVOUS_SERVERS: &[&str] = &[match option_env!("RENDEZVOUS_SERVER") {
-    Some(server) => server,
-    None => "rs-ny.rustdesk.com",
+    Some(server) if !server.is_empty() => server,
+    _ => "rs-ny.rustdesk.com",
 }];
 pub const RS_PUB_KEY: &str = match option_env!("RS_PUB_KEY") {
-    Some(key) => key,
-    None => "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=",
+    Some(key) if !key.is_empty() => key,
+    _ => "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=",
 };
 
 pub const RENDEZVOUS_PORT: i32 = 21116;
