@@ -81,10 +81,11 @@ lazy_static::lazy_static! {
     // `get_option` ignore any user-set/imported server, relay, api or key, so the
     // built-in RENDEZVOUS_SERVERS / RS_PUB_KEY always win.
     pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = RwLock::new(HashMap::from([
-        (keys::OPTION_CUSTOM_RENDEZVOUS_SERVER.to_owned(), String::new()),
+        // Most option keys moved out of hbb_common upstream, hence the literals.
+        ("custom-rendezvous-server".to_owned(), String::new()),
         (keys::OPTION_RELAY_SERVER.to_owned(), String::new()),
-        (keys::OPTION_API_SERVER.to_owned(), String::new()),
-        (keys::OPTION_KEY.to_owned(), String::new()),
+        ("api-server".to_owned(), String::new()),
+        ("key".to_owned(), String::new()),
     ]));
     pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
@@ -100,8 +101,8 @@ lazy_static::lazy_static! {
     pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = RwLock::new(HashMap::from([
         // Hide the whole Network settings tab (proxy / websocket / ID+relay
         // server) so users cannot touch any server-related configuration.
-        (keys::OPTION_HIDE_NETWORK_SETTINGS.to_owned(), "Y".to_owned()),
-        (keys::OPTION_HIDE_SERVER_SETTINGS.to_owned(), "Y".to_owned()),
+        ("hide-network-settings".to_owned(), "Y".to_owned()),
+        ("hide-server-settings".to_owned(), "Y".to_owned()),
     ]));
 }
 
